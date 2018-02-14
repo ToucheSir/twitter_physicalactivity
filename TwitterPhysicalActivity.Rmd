@@ -75,7 +75,7 @@ plot(fit.beta2)
 Correlation of variables:
 ```{r out.width=20}
 displayCorr <- function(results) {
-  kable(list(results$r, results$P))
+  knitr::kable(list(results$r, results$P), "markdown")
 }
 #cor(cleaned_data[vars], method = "pearson")
 displayCorr(rcorr(as.matrix(cleaned_data[vars]), type = "pearson"))

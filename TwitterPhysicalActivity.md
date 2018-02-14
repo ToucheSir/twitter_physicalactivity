@@ -192,44 +192,246 @@ plot(fit.beta2)
 
 ``` r
 displayCorr <- function(results) {
-  kable(list(results$r, results$P))
+  knitr::kable(list(results$r, results$P), "markdown")
 }
 #cor(cleaned_data[vars], method = "pearson")
 displayCorr(rcorr(as.matrix(cleaned_data[vars]), type = "pearson"))
 ```
 
-<table class="kable_wrapper">
+<table>
+<colgroup>
+<col width="18%" />
+<col width="7%" />
+<col width="7%" />
+<col width="10%" />
+<col width="11%" />
+<col width="18%" />
+<col width="7%" />
+<col width="9%" />
+<col width="8%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">PA_Tweets</th>
+<th align="right">All_Tweets</th>
+<th align="right">Inactivity_Cases</th>
+<th align="right">Inactivity_Percent</th>
+<th align="right">Inactivity_Percent_AgeAdjusted</th>
+<th align="right">Gini_Index</th>
+<th align="right">Gini_Index_MoE</th>
+<th align="right">PA_Tweets_Log</th>
+</tr>
+</thead>
 <tbody>
-<tr>
-<td>
-|                                  |  PA\_Tweets|  All\_Tweets|  Inactivity\_Cases|  Inactivity\_Percent|  Inactivity\_Percent\_AgeAdjusted|  Gini\_Index|  Gini\_Index\_MoE|  PA\_Tweets\_Log|
-|----------------------------------|-----------:|------------:|------------------:|--------------------:|---------------------------------:|------------:|-----------------:|----------------:|
-| PA\_Tweets                       |   1.0000000|    0.9600327|          0.8652400|           -0.1727724|                        -0.1496675|    0.1476223|        -0.1769564|        0.3816327|
-| All\_Tweets                      |   0.9600327|    1.0000000|          0.9018978|           -0.1906339|                        -0.1614875|    0.1820915|        -0.2192222|        0.4418422|
-| Inactivity\_Cases                |   0.8652400|    0.9018978|          1.0000000|           -0.1765177|                        -0.1398289|    0.1632351|        -0.3116606|        0.5424680|
-| Inactivity\_Percent              |  -0.1727724|   -0.1906339|         -0.1765177|            1.0000000|                         0.9878729|    0.1357708|         0.1694772|       -0.4573069|
-| Inactivity\_Percent\_AgeAdjusted |  -0.1496675|   -0.1614875|         -0.1398289|            0.9878729|                         1.0000000|    0.1583250|         0.1249542|       -0.4001130|
-| Gini\_Index                      |   0.1476223|    0.1820915|          0.1632351|            0.1357708|                         0.1583250|    1.0000000|         0.2439544|        0.0995427|
-| Gini\_Index\_MoE                 |  -0.1769564|   -0.2192222|         -0.3116606|            0.1694772|                         0.1249542|    0.2439544|         1.0000000|       -0.5459746|
-| PA\_Tweets\_Log                  |   0.3816327|    0.4418422|          0.5424680|           -0.4573069|                        -0.4001130|    0.0995427|        -0.5459746|        1.0000000|
-
-</td>
-<td>
-|                                  |  PA\_Tweets|  All\_Tweets|  Inactivity\_Cases|  Inactivity\_Percent|  Inactivity\_Percent\_AgeAdjusted|  Gini\_Index|  Gini\_Index\_MoE|  PA\_Tweets\_Log|
-|----------------------------------|-----------:|------------:|------------------:|--------------------:|---------------------------------:|------------:|-----------------:|----------------:|
-| PA\_Tweets                       |          NA|            0|                  0|                    0|                                 0|            0|                 0|                0|
-| All\_Tweets                      |           0|           NA|                  0|                    0|                                 0|            0|                 0|                0|
-| Inactivity\_Cases                |           0|            0|                 NA|                    0|                                 0|            0|                 0|                0|
-| Inactivity\_Percent              |           0|            0|                  0|                   NA|                                 0|            0|                 0|                0|
-| Inactivity\_Percent\_AgeAdjusted |           0|            0|                  0|                    0|                                NA|            0|                 0|                0|
-| Gini\_Index                      |           0|            0|                  0|                    0|                                 0|           NA|                 0|                0|
-| Gini\_Index\_MoE                 |           0|            0|                  0|                    0|                                 0|            0|                NA|                0|
-| PA\_Tweets\_Log                  |           0|            0|                  0|                    0|                                 0|            0|                 0|               NA|
-
-</td>
+<tr class="odd">
+<td align="left">PA_Tweets</td>
+<td align="right">1.0000000</td>
+<td align="right">0.9600327</td>
+<td align="right">0.8652400</td>
+<td align="right">-0.1727724</td>
+<td align="right">-0.1496675</td>
+<td align="right">0.1476223</td>
+<td align="right">-0.1769564</td>
+<td align="right">0.3816327</td>
+</tr>
+<tr class="even">
+<td align="left">All_Tweets</td>
+<td align="right">0.9600327</td>
+<td align="right">1.0000000</td>
+<td align="right">0.9018978</td>
+<td align="right">-0.1906339</td>
+<td align="right">-0.1614875</td>
+<td align="right">0.1820915</td>
+<td align="right">-0.2192222</td>
+<td align="right">0.4418422</td>
+</tr>
+<tr class="odd">
+<td align="left">Inactivity_Cases</td>
+<td align="right">0.8652400</td>
+<td align="right">0.9018978</td>
+<td align="right">1.0000000</td>
+<td align="right">-0.1765177</td>
+<td align="right">-0.1398289</td>
+<td align="right">0.1632351</td>
+<td align="right">-0.3116606</td>
+<td align="right">0.5424680</td>
+</tr>
+<tr class="even">
+<td align="left">Inactivity_Percent</td>
+<td align="right">-0.1727724</td>
+<td align="right">-0.1906339</td>
+<td align="right">-0.1765177</td>
+<td align="right">1.0000000</td>
+<td align="right">0.9878729</td>
+<td align="right">0.1357708</td>
+<td align="right">0.1694772</td>
+<td align="right">-0.4573069</td>
+</tr>
+<tr class="odd">
+<td align="left">Inactivity_Percent_AgeAdjusted</td>
+<td align="right">-0.1496675</td>
+<td align="right">-0.1614875</td>
+<td align="right">-0.1398289</td>
+<td align="right">0.9878729</td>
+<td align="right">1.0000000</td>
+<td align="right">0.1583250</td>
+<td align="right">0.1249542</td>
+<td align="right">-0.4001130</td>
+</tr>
+<tr class="even">
+<td align="left">Gini_Index</td>
+<td align="right">0.1476223</td>
+<td align="right">0.1820915</td>
+<td align="right">0.1632351</td>
+<td align="right">0.1357708</td>
+<td align="right">0.1583250</td>
+<td align="right">1.0000000</td>
+<td align="right">0.2439544</td>
+<td align="right">0.0995427</td>
+</tr>
+<tr class="odd">
+<td align="left">Gini_Index_MoE</td>
+<td align="right">-0.1769564</td>
+<td align="right">-0.2192222</td>
+<td align="right">-0.3116606</td>
+<td align="right">0.1694772</td>
+<td align="right">0.1249542</td>
+<td align="right">0.2439544</td>
+<td align="right">1.0000000</td>
+<td align="right">-0.5459746</td>
+</tr>
+<tr class="even">
+<td align="left">PA_Tweets_Log</td>
+<td align="right">0.3816327</td>
+<td align="right">0.4418422</td>
+<td align="right">0.5424680</td>
+<td align="right">-0.4573069</td>
+<td align="right">-0.4001130</td>
+<td align="right">0.0995427</td>
+<td align="right">-0.5459746</td>
+<td align="right">1.0000000</td>
 </tr>
 </tbody>
 </table>
+
+<table style="width:100%;">
+<colgroup>
+<col width="19%" />
+<col width="6%" />
+<col width="7%" />
+<col width="10%" />
+<col width="11%" />
+<col width="19%" />
+<col width="7%" />
+<col width="9%" />
+<col width="8%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">PA_Tweets</th>
+<th align="right">All_Tweets</th>
+<th align="right">Inactivity_Cases</th>
+<th align="right">Inactivity_Percent</th>
+<th align="right">Inactivity_Percent_AgeAdjusted</th>
+<th align="right">Gini_Index</th>
+<th align="right">Gini_Index_MoE</th>
+<th align="right">PA_Tweets_Log</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">PA_Tweets</td>
+<td align="right">NA</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">All_Tweets</td>
+<td align="right">0</td>
+<td align="right">NA</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">Inactivity_Cases</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">NA</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">Inactivity_Percent</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">NA</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">Inactivity_Percent_AgeAdjusted</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">NA</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">Gini_Index</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">NA</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">Gini_Index_MoE</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">NA</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">PA_Tweets_Log</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">NA</td>
+</tr>
+</tbody>
+</table>
+
 Comparing models:
 
 ``` r
@@ -403,38 +605,240 @@ trunc_data <- cleaned_data[cleaned_data$All_Tweets > median(cleaned_data$All_Twe
 displayCorr(rcorr(as.matrix(trunc_data[vars]), type = "pearson"))
 ```
 
-<table class="kable_wrapper">
+<table>
+<colgroup>
+<col width="18%" />
+<col width="7%" />
+<col width="7%" />
+<col width="10%" />
+<col width="11%" />
+<col width="18%" />
+<col width="7%" />
+<col width="9%" />
+<col width="8%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">PA_Tweets</th>
+<th align="right">All_Tweets</th>
+<th align="right">Inactivity_Cases</th>
+<th align="right">Inactivity_Percent</th>
+<th align="right">Inactivity_Percent_AgeAdjusted</th>
+<th align="right">Gini_Index</th>
+<th align="right">Gini_Index_MoE</th>
+<th align="right">PA_Tweets_Log</th>
+</tr>
+</thead>
 <tbody>
-<tr>
-<td>
-|                                  |  PA\_Tweets|  All\_Tweets|  Inactivity\_Cases|  Inactivity\_Percent|  Inactivity\_Percent\_AgeAdjusted|  Gini\_Index|  Gini\_Index\_MoE|  PA\_Tweets\_Log|
-|----------------------------------|-----------:|------------:|------------------:|--------------------:|---------------------------------:|------------:|-----------------:|----------------:|
-| PA\_Tweets                       |   1.0000000|    0.9595165|          0.8674039|           -0.1763574|                        -0.1566089|    0.2087093|        -0.2286187|        0.4723191|
-| All\_Tweets                      |   0.9595165|    1.0000000|          0.9007430|           -0.1880533|                        -0.1627543|    0.2588863|        -0.2840633|        0.5376199|
-| Inactivity\_Cases                |   0.8674039|    0.9007430|          1.0000000|           -0.1434239|                        -0.1157220|    0.2234304|        -0.3795684|        0.6050935|
-| Inactivity\_Percent              |  -0.1763574|   -0.1880533|         -0.1434239|            1.0000000|                         0.9907621|    0.0495294|         0.1647755|       -0.4976922|
-| Inactivity\_Percent\_AgeAdjusted |  -0.1566089|   -0.1627543|         -0.1157220|            0.9907621|                         1.0000000|    0.0698201|         0.1361131|       -0.4628461|
-| Gini\_Index                      |   0.2087093|    0.2588863|          0.2234304|            0.0495294|                         0.0698201|    1.0000000|         0.1421941|        0.2185893|
-| Gini\_Index\_MoE                 |  -0.2286187|   -0.2840633|         -0.3795684|            0.1647755|                         0.1361131|    0.1421941|         1.0000000|       -0.5130924|
-| PA\_Tweets\_Log                  |   0.4723191|    0.5376199|          0.6050935|           -0.4976922|                        -0.4628461|    0.2185893|        -0.5130924|        1.0000000|
-
-</td>
-<td>
-|                                  |  PA\_Tweets|  All\_Tweets|  Inactivity\_Cases|  Inactivity\_Percent|  Inactivity\_Percent\_AgeAdjusted|  Gini\_Index|  Gini\_Index\_MoE|  PA\_Tweets\_Log|
-|----------------------------------|-----------:|------------:|------------------:|--------------------:|---------------------------------:|------------:|-----------------:|----------------:|
-| PA\_Tweets                       |          NA|            0|            0.0e+00|            0.0000000|                         0.0000000|    0.0000000|             0e+00|                0|
-| All\_Tweets                      |           0|           NA|            0.0e+00|            0.0000000|                         0.0000000|    0.0000000|             0e+00|                0|
-| Inactivity\_Cases                |           0|            0|                 NA|            0.0000000|                         0.0000043|    0.0000000|             0e+00|                0|
-| Inactivity\_Percent              |           0|            0|            0.0e+00|                   NA|                         0.0000000|    0.0497444|             0e+00|                0|
-| Inactivity\_Percent\_AgeAdjusted |           0|            0|            4.3e-06|            0.0000000|                                NA|    0.0056458|             1e-07|                0|
-| Gini\_Index                      |           0|            0|            0.0e+00|            0.0497444|                         0.0056458|           NA|             0e+00|                0|
-| Gini\_Index\_MoE                 |           0|            0|            0.0e+00|            0.0000000|                         0.0000001|    0.0000000|                NA|                0|
-| PA\_Tweets\_Log                  |           0|            0|            0.0e+00|            0.0000000|                         0.0000000|    0.0000000|             0e+00|               NA|
-
-</td>
+<tr class="odd">
+<td align="left">PA_Tweets</td>
+<td align="right">1.0000000</td>
+<td align="right">0.9595165</td>
+<td align="right">0.8674039</td>
+<td align="right">-0.1763574</td>
+<td align="right">-0.1566089</td>
+<td align="right">0.2087093</td>
+<td align="right">-0.2286187</td>
+<td align="right">0.4723191</td>
+</tr>
+<tr class="even">
+<td align="left">All_Tweets</td>
+<td align="right">0.9595165</td>
+<td align="right">1.0000000</td>
+<td align="right">0.9007430</td>
+<td align="right">-0.1880533</td>
+<td align="right">-0.1627543</td>
+<td align="right">0.2588863</td>
+<td align="right">-0.2840633</td>
+<td align="right">0.5376199</td>
+</tr>
+<tr class="odd">
+<td align="left">Inactivity_Cases</td>
+<td align="right">0.8674039</td>
+<td align="right">0.9007430</td>
+<td align="right">1.0000000</td>
+<td align="right">-0.1434239</td>
+<td align="right">-0.1157220</td>
+<td align="right">0.2234304</td>
+<td align="right">-0.3795684</td>
+<td align="right">0.6050935</td>
+</tr>
+<tr class="even">
+<td align="left">Inactivity_Percent</td>
+<td align="right">-0.1763574</td>
+<td align="right">-0.1880533</td>
+<td align="right">-0.1434239</td>
+<td align="right">1.0000000</td>
+<td align="right">0.9907621</td>
+<td align="right">0.0495294</td>
+<td align="right">0.1647755</td>
+<td align="right">-0.4976922</td>
+</tr>
+<tr class="odd">
+<td align="left">Inactivity_Percent_AgeAdjusted</td>
+<td align="right">-0.1566089</td>
+<td align="right">-0.1627543</td>
+<td align="right">-0.1157220</td>
+<td align="right">0.9907621</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0698201</td>
+<td align="right">0.1361131</td>
+<td align="right">-0.4628461</td>
+</tr>
+<tr class="even">
+<td align="left">Gini_Index</td>
+<td align="right">0.2087093</td>
+<td align="right">0.2588863</td>
+<td align="right">0.2234304</td>
+<td align="right">0.0495294</td>
+<td align="right">0.0698201</td>
+<td align="right">1.0000000</td>
+<td align="right">0.1421941</td>
+<td align="right">0.2185893</td>
+</tr>
+<tr class="odd">
+<td align="left">Gini_Index_MoE</td>
+<td align="right">-0.2286187</td>
+<td align="right">-0.2840633</td>
+<td align="right">-0.3795684</td>
+<td align="right">0.1647755</td>
+<td align="right">0.1361131</td>
+<td align="right">0.1421941</td>
+<td align="right">1.0000000</td>
+<td align="right">-0.5130924</td>
+</tr>
+<tr class="even">
+<td align="left">PA_Tweets_Log</td>
+<td align="right">0.4723191</td>
+<td align="right">0.5376199</td>
+<td align="right">0.6050935</td>
+<td align="right">-0.4976922</td>
+<td align="right">-0.4628461</td>
+<td align="right">0.2185893</td>
+<td align="right">-0.5130924</td>
+<td align="right">1.0000000</td>
 </tr>
 </tbody>
 </table>
+
+<table style="width:100%;">
+<colgroup>
+<col width="19%" />
+<col width="6%" />
+<col width="7%" />
+<col width="10%" />
+<col width="11%" />
+<col width="19%" />
+<col width="7%" />
+<col width="9%" />
+<col width="8%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">PA_Tweets</th>
+<th align="right">All_Tweets</th>
+<th align="right">Inactivity_Cases</th>
+<th align="right">Inactivity_Percent</th>
+<th align="right">Inactivity_Percent_AgeAdjusted</th>
+<th align="right">Gini_Index</th>
+<th align="right">Gini_Index_MoE</th>
+<th align="right">PA_Tweets_Log</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">PA_Tweets</td>
+<td align="right">NA</td>
+<td align="right">0</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000000</td>
+<td align="right">0.0000000</td>
+<td align="right">0.0000000</td>
+<td align="right">0e+00</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">All_Tweets</td>
+<td align="right">0</td>
+<td align="right">NA</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000000</td>
+<td align="right">0.0000000</td>
+<td align="right">0.0000000</td>
+<td align="right">0e+00</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">Inactivity_Cases</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">NA</td>
+<td align="right">0.0000000</td>
+<td align="right">0.0000043</td>
+<td align="right">0.0000000</td>
+<td align="right">0e+00</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">Inactivity_Percent</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0.0e+00</td>
+<td align="right">NA</td>
+<td align="right">0.0000000</td>
+<td align="right">0.0497444</td>
+<td align="right">0e+00</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">Inactivity_Percent_AgeAdjusted</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">4.3e-06</td>
+<td align="right">0.0000000</td>
+<td align="right">NA</td>
+<td align="right">0.0056458</td>
+<td align="right">1e-07</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">Gini_Index</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0497444</td>
+<td align="right">0.0056458</td>
+<td align="right">NA</td>
+<td align="right">0e+00</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">Gini_Index_MoE</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000000</td>
+<td align="right">0.0000001</td>
+<td align="right">0.0000000</td>
+<td align="right">NA</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">PA_Tweets_Log</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0.0e+00</td>
+<td align="right">0.0000000</td>
+<td align="right">0.0000000</td>
+<td align="right">0.0000000</td>
+<td align="right">0e+00</td>
+<td align="right">NA</td>
+</tr>
+</tbody>
+</table>
+
 ``` r
 par(mfrow=c(2, 1))
 scatter.smooth(cleaned_data$PA_Tweets, cleaned_data$Inactivity_Percent)
