@@ -1,0 +1,113 @@
+---
+title: "Twitter and Physical Activity"
+output: rmarkdown::github_document
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+install.packages("betareg")
+install.packages("ggplot2")
+install.packages("fitdistrplus")
+install.packages("logspline")
+install.packages("Hmisc")
+
+library(foreign)
+library(betareg)
+library(ggplot2)
+library(fitdistrplus)
+library(logspline)
+library(Hmisc)
+```
+The compiled dataset contains a subset of US counties (names and FIPS codes).
+The associated data for each county is as follows:
+* All_Tweets: the total collected number of tweets from that county
+* PA_Tweets: the number of tweets identified as physical activity-related
+* Inactivity_Cases: TODO
+* Inactivity_Percent: TODO
+* Inactivity_Percent_AgeAdjusted: TODO
+* Gini_Index: TODO
+* Gini_Index_MoE: the margin of error of the Gini index estimate
+```{r}
+all_data <- read.csv("all_data.csv")
+all_data[0:5,]
+```
+Not all counties in the dataset have tweet or physical activity data available, so we must filter those out.
+We must also normalize the percentages (expressed here as a number /100) to values we can use for a beta distribution (i.e. 0-1)
+```{r}
+# Remove rows with missing values
+cleaned_data <- na.omit(all_data)
+# Normalize percentages to the interval [0,1]
+cleaned_data$Inactivity_Percent <- cleaned_data$Inactivity_Percent / 100
+cleaned_data$Inactivity_Percent_AgeAdjusted <- cleaned_data$Inactivity_Percent_AgeAdjusted / 100
+
+cleaned_data$PA_Tweets_Log <- log1p(cleaned_data$PA_Tweets)
+vars <- c(2:6, 9:11)
+summary(cleaned_data[vars])
+```
+The count data is heavily right-skewed with notable outliers. This is partly attributable to the disparity in population between counties
+(e.g. LA, the most populous county, has a similar relative magnitude of tweets)
+```{r fig.width=20, fig.height=8}
+par(mfrow=c(ceiling(length(vars) / 2), 2))
+for (v in vars) {
+  boxplot(cleaned_data[v], main = colnames(cleaned_data)[v], horizontal = TRUE)
+}
+```
+
+```{r fig.width=20, fig.height=10}
+par(mfrow=c(2, 2))
+hist(cleaned_data$Inactivity_Percent)
+descdist(cleaned_data$Inactivity_Percent)
+
+hist(cleaned_data$Inactivity_Percent_AgeAdjusted)
+descdist(cleaned_data$Inactivity_Percent_AgeAdjusted)
+
+fit.beta1 <- fitdist(cleaned_data$Inactivity_Percent, "beta")
+plot(fit.beta1)
+
+fit.beta2 <- fitdist(cleaned_data$Inactivity_Percent_AgeAdjusted, "beta")
+plot(fit.beta2)
+```
+Correlation of variables:
+```{r out.width=20}
+#cor(cleaned_data[vars], method = "pearson")
+rcorr(as.matrix(cleaned_data[vars]), type = "pearson")
+```
+Comparing models:
+```{r}
+m1 <- betareg(Inactivity_Percent ~ PA_Tweets, data = cleaned_data)
+summary(m1)
+
+m2 <- update(m1, . ~ . + Gini_Index)
+summary(m2)
+
+m3 <- update(m2, . ~ . + PA_Tweets:Gini_Index)
+
+m4 <- betareg(Inactivity_Percent ~ PA_Tweets_Log, data = cleaned_data)
+summary(m4)
+
+m5 <- update(m4, . ~ . + Gini_Index)
+summary(m5)
+
+m6 <- update(m5, . ~ . + PA_Tweets:Gini_Index)
+summary(m6)
+
+# AIC(m.beta1, m.beta2, m.beta3)
+AIC(m1, m2, m3, m4, m5, m6, k = log(nrow(cleaned_data)))
+```
+
+```{r}
+trunc_data <- cleaned_data[cleaned_data$All_Tweets > median(cleaned_data$All_Tweets),]
+rcorr(as.matrix(trunc_data[vars]), type = "pearson")
+```
+```{r fig.width=20}
+par(mfrow=c(2, 1))
+scatter.smooth(cleaned_data$PA_Tweets, cleaned_data$Inactivity_Percent)
+scatter.smooth(cleaned_data$PA_Tweets_Log, cleaned_data$Inactivity_Percent)
+```
+```{r}
+predict(m4, data.frame(PA_Tweets_Log = log(23)))
+```
+
