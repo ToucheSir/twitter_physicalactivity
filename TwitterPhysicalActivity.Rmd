@@ -14,6 +14,7 @@ install.packages("ggplot2")
 install.packages("fitdistrplus")
 install.packages("logspline")
 install.packages("Hmisc")
+install.packages("xtable")
 
 library(foreign)
 library(betareg)
@@ -34,7 +35,7 @@ The associated data for each county is as follows:
 * Gini_Index_MoE: the margin of error of the Gini index estimate
 ```{r}
 all_data <- read.csv("all_data.csv")
-all_data[0:5,]
+kable(all_data[0:5,], "markdown")
 ```
 Not all counties in the dataset have tweet or physical activity data available, so we must filter those out.
 We must also normalize the percentages (expressed here as a number /100) to values we can use for a beta distribution (i.e. 0-1)
@@ -47,7 +48,7 @@ cleaned_data$Inactivity_Percent_AgeAdjusted <- cleaned_data$Inactivity_Percent_A
 
 cleaned_data$PA_Tweets_Log <- log1p(cleaned_data$PA_Tweets)
 vars <- c(2:6, 9:11)
-summary(cleaned_data[vars])
+kable(do.call(cbind, lapply(cleaned_data[vars], summary)), "markdown")
 ```
 The count data is heavily right-skewed with notable outliers. This is partly attributable to the disparity in population between counties
 (e.g. LA, the most populous county, has a similar relative magnitude of tweets)
@@ -107,12 +108,12 @@ AIC(m1, m2, m3, m4, m5, m6, k = log(nrow(cleaned_data)))
 trunc_data <- cleaned_data[cleaned_data$All_Tweets > median(cleaned_data$All_Tweets),]
 displayCorr(rcorr(as.matrix(trunc_data[vars]), type = "pearson"))
 ```
-```{r fig.width=20}
+```{r fig.width=20, fig.height=15}
 par(mfrow=c(2, 1))
 scatter.smooth(cleaned_data$PA_Tweets, cleaned_data$Inactivity_Percent)
 scatter.smooth(cleaned_data$PA_Tweets_Log, cleaned_data$Inactivity_Percent)
 ```
 ```{r}
-predict(m4, data.frame(PA_Tweets_Log = log(23)))
+kable(predict(m4, data.frame(PA_Tweets_Log = log(23))))
 ```
 

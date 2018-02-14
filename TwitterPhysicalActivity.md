@@ -42,6 +42,13 @@ install.packages("Hmisc")
     ## (as 'lib' is unspecified)
 
 ``` r
+install.packages("xtable")
+```
+
+    ## Installing package into '/home/brianc/R/x86_64-pc-linux-gnu-library/3.4'
+    ## (as 'lib' is unspecified)
+
+``` r
 library(foreign)
 library(betareg)
 library(ggplot2)
@@ -76,27 +83,99 @@ The compiled dataset contains a subset of US counties (names and FIPS codes). Th
 
 ``` r
 all_data <- read.csv("all_data.csv")
-all_data[0:5,]
+kable(all_data[0:5,], "markdown")
 ```
 
-    ##   FIPS PA_Tweets All_Tweets Inactivity_Cases Inactivity_Percent
-    ## 1 1001       104       6063            11342               28.6
-    ## 2 1003       511      27019            32856               22.3
-    ## 3 1005         5        802             6578               31.8
-    ## 4 1007         1        591             5846               33.9
-    ## 5 1009        23       1681            11954               28.0
-    ##   Inactivity_Percent_AgeAdjusted      FIPS_Long                    Name
-    ## 1                           28.0 0500000US01001 Autauga County, Alabama
-    ## 2                           21.2 0500000US01003 Baldwin County, Alabama
-    ## 3                           31.0 0500000US01005 Barbour County, Alabama
-    ## 4                           33.3 0500000US01007    Bibb County, Alabama
-    ## 5                           27.1 0500000US01009  Blount County, Alabama
-    ##   Gini_Index Gini_Index_MoE
-    ## 1     0.4031         0.0149
-    ## 2     0.4455         0.0095
-    ## 3     0.4658         0.0146
-    ## 4     0.4500         0.0468
-    ## 5     0.4144         0.0137
+<table>
+<colgroup>
+<col width="3%" />
+<col width="6%" />
+<col width="7%" />
+<col width="10%" />
+<col width="11%" />
+<col width="19%" />
+<col width="9%" />
+<col width="14%" />
+<col width="7%" />
+<col width="9%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="right">FIPS</th>
+<th align="right">PA_Tweets</th>
+<th align="right">All_Tweets</th>
+<th align="right">Inactivity_Cases</th>
+<th align="right">Inactivity_Percent</th>
+<th align="right">Inactivity_Percent_AgeAdjusted</th>
+<th align="left">FIPS_Long</th>
+<th align="left">Name</th>
+<th align="right">Gini_Index</th>
+<th align="right">Gini_Index_MoE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1001</td>
+<td align="right">104</td>
+<td align="right">6063</td>
+<td align="right">11342</td>
+<td align="right">28.6</td>
+<td align="right">28.0</td>
+<td align="left">0500000US01001</td>
+<td align="left">Autauga County, Alabama</td>
+<td align="right">0.4031</td>
+<td align="right">0.0149</td>
+</tr>
+<tr class="even">
+<td align="right">1003</td>
+<td align="right">511</td>
+<td align="right">27019</td>
+<td align="right">32856</td>
+<td align="right">22.3</td>
+<td align="right">21.2</td>
+<td align="left">0500000US01003</td>
+<td align="left">Baldwin County, Alabama</td>
+<td align="right">0.4455</td>
+<td align="right">0.0095</td>
+</tr>
+<tr class="odd">
+<td align="right">1005</td>
+<td align="right">5</td>
+<td align="right">802</td>
+<td align="right">6578</td>
+<td align="right">31.8</td>
+<td align="right">31.0</td>
+<td align="left">0500000US01005</td>
+<td align="left">Barbour County, Alabama</td>
+<td align="right">0.4658</td>
+<td align="right">0.0146</td>
+</tr>
+<tr class="even">
+<td align="right">1007</td>
+<td align="right">1</td>
+<td align="right">591</td>
+<td align="right">5846</td>
+<td align="right">33.9</td>
+<td align="right">33.3</td>
+<td align="left">0500000US01007</td>
+<td align="left">Bibb County, Alabama</td>
+<td align="right">0.4500</td>
+<td align="right">0.0468</td>
+</tr>
+<tr class="odd">
+<td align="right">1009</td>
+<td align="right">23</td>
+<td align="right">1681</td>
+<td align="right">11954</td>
+<td align="right">28.0</td>
+<td align="right">27.1</td>
+<td align="left">0500000US01009</td>
+<td align="left">Blount County, Alabama</td>
+<td align="right">0.4144</td>
+<td align="right">0.0137</td>
+</tr>
+</tbody>
+</table>
 
 Not all counties in the dataset have tweet or physical activity data available, so we must filter those out. We must also normalize the percentages (expressed here as a number /100) to values we can use for a beta distribution (i.e. 0-1)
 
@@ -109,30 +188,103 @@ cleaned_data$Inactivity_Percent_AgeAdjusted <- cleaned_data$Inactivity_Percent_A
 
 cleaned_data$PA_Tweets_Log <- log1p(cleaned_data$PA_Tweets)
 vars <- c(2:6, 9:11)
-summary(cleaned_data[vars])
+kable(do.call(cbind, lapply(cleaned_data[vars], summary)), "markdown")
 ```
 
-    ##    PA_Tweets         All_Tweets      Inactivity_Cases  Inactivity_Percent
-    ##  Min.   :    0.0   Min.   :      0   Min.   :     16   Min.   :0.0810    
-    ##  1st Qu.:    5.0   1st Qu.:    427   1st Qu.:   2214   1st Qu.:0.2260    
-    ##  Median :   20.0   Median :   1450   Median :   5285   Median :0.2580    
-    ##  Mean   :  271.2   Mean   :  15386   Mean   :  16600   Mean   :0.2595    
-    ##  3rd Qu.:   99.0   3rd Qu.:   5942   3rd Qu.:  12773   3rd Qu.:0.2940    
-    ##  Max.   :66486.0   Max.   :2408076   Max.   :1310363   Max.   :0.4140    
-    ##  Inactivity_Percent_AgeAdjusted   Gini_Index     Gini_Index_MoE   
-    ##  Min.   :0.084                  Min.   :0.3296   Min.   :0.00160  
-    ##  1st Qu.:0.214                  1st Qu.:0.4147   1st Qu.:0.01360  
-    ##  Median :0.245                  Median :0.4356   Median :0.02000  
-    ##  Mean   :0.247                  Mean   :0.4378   Mean   :0.02332  
-    ##  3rd Qu.:0.280                  3rd Qu.:0.4592   3rd Qu.:0.02900  
-    ##  Max.   :0.398                  Max.   :0.5985   Max.   :0.16180  
-    ##  PA_Tweets_Log   
-    ##  Min.   : 0.000  
-    ##  1st Qu.: 1.792  
-    ##  Median : 3.045  
-    ##  Mean   : 3.288  
-    ##  3rd Qu.: 4.605  
-    ##  Max.   :11.105
+<table>
+<colgroup>
+<col width="6%" />
+<col width="7%" />
+<col width="8%" />
+<col width="12%" />
+<col width="13%" />
+<col width="22%" />
+<col width="8%" />
+<col width="11%" />
+<col width="10%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">PA_Tweets</th>
+<th align="right">All_Tweets</th>
+<th align="right">Inactivity_Cases</th>
+<th align="right">Inactivity_Percent</th>
+<th align="right">Inactivity_Percent_AgeAdjusted</th>
+<th align="right">Gini_Index</th>
+<th align="right">Gini_Index_MoE</th>
+<th align="right">PA_Tweets_Log</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Min.</td>
+<td align="right">0.000</td>
+<td align="right">0.00</td>
+<td align="right">16.0</td>
+<td align="right">0.0810000</td>
+<td align="right">0.0840000</td>
+<td align="right">0.3296000</td>
+<td align="right">0.0016000</td>
+<td align="right">0.000000</td>
+</tr>
+<tr class="even">
+<td align="left">1st Qu.</td>
+<td align="right">5.000</td>
+<td align="right">427.00</td>
+<td align="right">2214.0</td>
+<td align="right">0.2260000</td>
+<td align="right">0.2140000</td>
+<td align="right">0.4147000</td>
+<td align="right">0.0136000</td>
+<td align="right">1.791759</td>
+</tr>
+<tr class="odd">
+<td align="left">Median</td>
+<td align="right">20.000</td>
+<td align="right">1450.00</td>
+<td align="right">5285.0</td>
+<td align="right">0.2580000</td>
+<td align="right">0.2450000</td>
+<td align="right">0.4356000</td>
+<td align="right">0.0200000</td>
+<td align="right">3.044522</td>
+</tr>
+<tr class="even">
+<td align="left">Mean</td>
+<td align="right">271.157</td>
+<td align="right">15386.16</td>
+<td align="right">16600.5</td>
+<td align="right">0.2595285</td>
+<td align="right">0.2469793</td>
+<td align="right">0.4377601</td>
+<td align="right">0.0233157</td>
+<td align="right">3.288396</td>
+</tr>
+<tr class="odd">
+<td align="left">3rd Qu.</td>
+<td align="right">99.000</td>
+<td align="right">5942.00</td>
+<td align="right">12773.0</td>
+<td align="right">0.2940000</td>
+<td align="right">0.2800000</td>
+<td align="right">0.4592000</td>
+<td align="right">0.0290000</td>
+<td align="right">4.605170</td>
+</tr>
+<tr class="even">
+<td align="left">Max.</td>
+<td align="right">66486.000</td>
+<td align="right">2408076.00</td>
+<td align="right">1310363.0</td>
+<td align="right">0.4140000</td>
+<td align="right">0.3980000</td>
+<td align="right">0.5985000</td>
+<td align="right">0.1618000</td>
+<td align="right">11.104762</td>
+</tr>
+</tbody>
+</table>
 
 The count data is heavily right-skewed with notable outliers. This is partly attributable to the disparity in population between counties (e.g. LA, the most populous county, has a similar relative magnitude of tweets)
 
@@ -848,8 +1000,9 @@ scatter.smooth(cleaned_data$PA_Tweets_Log, cleaned_data$Inactivity_Percent)
 ![](TwitterPhysicalActivity_files/figure-markdown_github/unnamed-chunk-9-1.png)
 
 ``` r
-predict(m4, data.frame(PA_Tweets_Log = log(23)))
+kable(predict(m4, data.frame(PA_Tweets_Log = log(23))))
 ```
 
-    ##         1 
-    ## 0.2606127
+|          x|
+|----------:|
+|  0.2606127|
