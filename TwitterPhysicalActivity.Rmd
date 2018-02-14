@@ -8,6 +8,7 @@ This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute
 Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
 
 ```{r}
+options(repos = c(CRAN = "https://cran.rstudio.com"))
 install.packages("betareg")
 install.packages("ggplot2")
 install.packages("fitdistrplus")
@@ -20,6 +21,7 @@ library(ggplot2)
 library(fitdistrplus)
 library(logspline)
 library(Hmisc)
+library(knitr)
 ```
 The compiled dataset contains a subset of US counties (names and FIPS codes).
 The associated data for each county is as follows:
@@ -72,8 +74,11 @@ plot(fit.beta2)
 ```
 Correlation of variables:
 ```{r out.width=20}
+displayCorr <- function(results) {
+  kable(list(results$r, results$P))
+}
 #cor(cleaned_data[vars], method = "pearson")
-rcorr(as.matrix(cleaned_data[vars]), type = "pearson")
+displayCorr(rcorr(as.matrix(cleaned_data[vars]), type = "pearson"))
 ```
 Comparing models:
 ```{r}
@@ -100,7 +105,7 @@ AIC(m1, m2, m3, m4, m5, m6, k = log(nrow(cleaned_data)))
 
 ```{r}
 trunc_data <- cleaned_data[cleaned_data$All_Tweets > median(cleaned_data$All_Tweets),]
-rcorr(as.matrix(trunc_data[vars]), type = "pearson")
+displayCorr(rcorr(as.matrix(trunc_data[vars]), type = "pearson"))
 ```
 ```{r fig.width=20}
 par(mfrow=c(2, 1))
