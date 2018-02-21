@@ -1,6 +1,6 @@
 ---
 title: "Twitter and Physical Activity"
-output: rmarkdown::github_document
+output: github_document
 ---
 
 This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
@@ -15,6 +15,7 @@ install.packages("fitdistrplus")
 install.packages("logspline")
 install.packages("Hmisc")
 install.packages("xtable")
+install.packages("rmarkdown", repos = "https://cran.revolutionanalytics.com")
 
 library(foreign)
 library(betareg)
@@ -42,15 +43,12 @@ We must also normalize the percentages (expressed here as a number /100) to valu
 ```{r}
 # Remove rows with missing values
 cleaned_data <- na.omit(all_data)
-# Normalize percentages to the interval [0,1]
-cleaned_data$Inactivity_Percent <- cleaned_data$Inactivity_Percent / 100
-cleaned_data$Inactivity_Percent_AgeAdjusted <- cleaned_data$Inactivity_Percent_AgeAdjusted / 100
 
 cleaned_data$PA_Tweets_Log <- log1p(cleaned_data$PA_Tweets)
-vars <- c(2:6, 9:11)
+vars <- c(3:6, 34)
 kable(do.call(cbind, lapply(cleaned_data[vars], summary)), "markdown")
 ```
-The count data is heavily right-skewed with notable outliers. This is partly attributable to the disparity in population between counties
+The count data are heavily right-skewed with notable outliers. This is partly attributable to the disparity in population between counties
 (e.g. LA, the most populous county, has a similar relative magnitude of tweets)
 ```{r fig.width=20, fig.height=8}
 par(mfrow=c(ceiling(length(vars) / 2), 2))
@@ -64,14 +62,14 @@ par(mfrow=c(2, 2))
 hist(cleaned_data$Inactivity_Percent)
 descdist(cleaned_data$Inactivity_Percent)
 
-hist(cleaned_data$Inactivity_Percent_AgeAdjusted)
-descdist(cleaned_data$Inactivity_Percent_AgeAdjusted)
+#hist(cleaned_data$Inactivity_Percent_AgeAdjusted)
+#descdist(cleaned_data$Inactivity_Percent_AgeAdjusted)
 
 fit.beta1 <- fitdist(cleaned_data$Inactivity_Percent, "beta")
 plot(fit.beta1)
 
-fit.beta2 <- fitdist(cleaned_data$Inactivity_Percent_AgeAdjusted, "beta")
-plot(fit.beta2)
+#fit.beta2 <- fitdist(cleaned_data$Inactivity_Percent_AgeAdjusted, "beta")
+#plot(fit.beta2)
 ```
 Correlation of variables:
 ```{r out.width=20}
@@ -86,18 +84,18 @@ Comparing models:
 m1 <- betareg(Inactivity_Percent ~ PA_Tweets, data = cleaned_data)
 summary(m1)
 
-m2 <- update(m1, . ~ . + Gini_Index)
+m2 <- update(m1, . ~ . + gini_estimate)
 summary(m2)
 
-m3 <- update(m2, . ~ . + PA_Tweets:Gini_Index)
+m3 <- update(m2, . ~ . + PA_Tweets:gini_estimate)
 
 m4 <- betareg(Inactivity_Percent ~ PA_Tweets_Log, data = cleaned_data)
 summary(m4)
 
-m5 <- update(m4, . ~ . + Gini_Index)
+m5 <- update(m4, . ~ . + gini_estimate)
 summary(m5)
 
-m6 <- update(m5, . ~ . + PA_Tweets:Gini_Index)
+m6 <- update(m5, . ~ . + PA_Tweets:gini_estimate)
 summary(m6)
 
 # AIC(m.beta1, m.beta2, m.beta3)
