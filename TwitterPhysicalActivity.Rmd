@@ -1,8 +1,8 @@
 ---
 title: "Twitter and Physical Activity"
 output:
-  github_document: default
   html_notebook: default
+  github_document: default
 ---
 ```{r message=FALSE}
 library(foreign)
@@ -44,6 +44,7 @@ We must also normalize the percentages (expressed here as a number /100) to valu
 # Remove rows with missing values
 cleaned_data <- na.omit(all_data)
 cleaned_data$Tweets.PA.Log <- log1p(cleaned_data$Tweets.PA)
+cleaned_data$Tweets.PA.Percent <- cleaned_data$Tweets.PA / cleaned_data$Tweets.All
 cleaned_data$PA.Total <- cleaned_data$PA.Active + cleaned_data$PA.Inactive
 cleaned_data$PA.Percent.Active <- cleaned_data$PA.Active / cleaned_data$PA.Total
 cleaned_data$PA.Percent.Inactive <- cleaned_data$PA.Inactive / cleaned_data$PA.Total
@@ -51,6 +52,8 @@ cleaned_data$PA.Percent.Inactive <- cleaned_data$PA.Inactive / cleaned_data$PA.T
 vars <- c(
   "Gini_Index.Estimate",
   "Tweets.PA",
+  "Tweets.PA.Percent",
+  "Tweets.PA.Log",
   "Tweets.All",
   "PA.Active",
   "PA.Inactive",
@@ -63,7 +66,7 @@ display(as.data.frame(do.call(cbind, lapply(cleaned_data[vars], summary))))
 The count data are heavily right-skewed with notable outliers. This is partly attributable to the disparity in population between counties
 (e.g. LA, the most populous county, has a similar relative magnitude of tweets)
 
-```{r fig.width=20, fig.height=8}
+```{r fig.width=20, fig.height=10}
 par(mfrow=c(ceiling(length(vars) / 2), 2))
 for (v in vars) {
   boxplot(cleaned_data[v], main = v, horizontal = TRUE)
@@ -88,7 +91,7 @@ plot(fit.beta2)
 Correlation of variables:
 
 ```{r out.width=20}
-results <- rcorr(as.matrix(cleaned_data[vars]), type = "pearson")
+results <- rcorr(as.matrix(cleaned_data[vars]), type = "spearman")
 display(as.data.frame(results$r))
 display(as.data.frame(results$P))
 ```
@@ -103,6 +106,7 @@ m2 <- update(m1, . ~ . + Gini_Index.Estimate)
 summary(m2)
 
 m3 <- update(m2, . ~ . + Tweets.PA:Gini_Index.Estimate)
+summary(m3)
 
 m4 <- betareg(PA.Percent.Inactive ~ Tweets.PA.Log, data = cleaned_data)
 summary(m4)
