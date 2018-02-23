@@ -33,7 +33,7 @@ display <- function(x) {
   else kable(x)
 }
 
-all_data <- read.csv("all_data_mmsa.csv")
+all_data <- read.csv("all_data.csv")
 display(head(all_data))
 ```
 
@@ -45,9 +45,8 @@ We must also normalize the percentages (expressed here as a number /100) to valu
 cleaned_data <- na.omit(all_data)
 cleaned_data$Tweets.PA.Log <- log1p(cleaned_data$Tweets.PA)
 cleaned_data$Tweets.PA.Percent <- cleaned_data$Tweets.PA / cleaned_data$Tweets.All
-cleaned_data$PA.Total <- cleaned_data$PA.Active + cleaned_data$PA.Inactive
-cleaned_data$PA.Percent.Active <- cleaned_data$PA.Active / cleaned_data$PA.Total
-cleaned_data$PA.Percent.Inactive <- cleaned_data$PA.Inactive / cleaned_data$PA.Total
+cleaned_data$Inactivity.Percent <- cleaned_data$Inactivity.Percent / 100
+cleaned_data$Inactivity.Ageadjusted <- cleaned_data$Inactivity.Ageadjusted / 100
 
 vars <- c(
   "Gini_Index.Estimate",
@@ -55,10 +54,9 @@ vars <- c(
   "Tweets.PA.Percent",
   "Tweets.PA.Log",
   "Tweets.All",
-  "PA.Active",
-  "PA.Inactive",
-  "PA.Percent.Active",
-  "PA.Percent.Inactive"
+  "Inactivity.Cases",
+  "Inactivity.Percent",
+  "Inactivity.Ageadjusted"
 )
 display(as.data.frame(do.call(cbind, lapply(cleaned_data[vars], summary))))
 ```
@@ -75,17 +73,25 @@ for (v in vars) {
 
 ```{r fig.width=20, fig.height=15}
 par(mfrow=c(2, 2))
-hist(cleaned_data$PA.Percent.Active)
-descdist(cleaned_data$PA.Percent.Active)
+hist(cleaned_data$Inactivity.Percent)
+descdist(cleaned_data$Inactivity.Percent)
 
-hist(cleaned_data$PA.Percent.Inactive)
-descdist(cleaned_data$PA.Percent.Inactive)
+hist(cleaned_data$Inactivity.Ageadjusted)
+descdist(cleaned_data$Inactivity.Ageadjusted)
 
-fit.beta1 <- fitdist(cleaned_data$PA.Percent.Active, "beta")
+fit.beta1 <- fitdist(cleaned_data$Inactivity.Percent, "beta")
 plot(fit.beta1)
 
-fit.beta2 <- fitdist(cleaned_data$PA.Percent.Inactive, "beta")
+fit.beta2 <- fitdist(cleaned_data$Inactivity.Ageadjusted, "beta")
 plot(fit.beta2)
+```
+
+Correlation of variables:
+
+```{r out.width=20}
+results <- rcorr(as.matrix(cleaned_data[vars]), type = "pearson")
+display(as.data.frame(results$r))
+display(as.data.frame(results$P))
 ```
 
 Correlation of variables:
@@ -99,7 +105,7 @@ display(as.data.frame(results$P))
 Comparing models:
 
 ```{r}
-m1 <- betareg(PA.Percent.Inactive ~ Tweets.PA, data = cleaned_data)
+m1 <- betareg(Inactivity.Percent ~ Tweets.PA, data = cleaned_data)
 summary(m1)
 
 m2 <- update(m1, . ~ . + Gini_Index.Estimate)
@@ -108,7 +114,7 @@ summary(m2)
 m3 <- update(m2, . ~ . + Tweets.PA:Gini_Index.Estimate)
 summary(m3)
 
-m4 <- betareg(PA.Percent.Inactive ~ Tweets.PA.Log, data = cleaned_data)
+m4 <- betareg(Inactivity.Percent ~ Tweets.PA.Log, data = cleaned_data)
 summary(m4)
 
 m5 <- update(m4, . ~ . + Gini_Index.Estimate)
@@ -117,8 +123,28 @@ summary(m5)
 m6 <- update(m5, . ~ . + Tweets.PA:Gini_Index.Estimate)
 summary(m6)
 
-# AIC(m.beta1, m.beta2, m.beta3)
-display(AIC(m1, m2, m3, m4, m5, m6, k = log(nrow(cleaned_data))))
+display(AIC(m1, m2, m3, m4, m5, m6))
+```
+```{r}
+m1 <- betareg(Inactivity.Ageadjusted ~ Tweets.PA, data = cleaned_data)
+summary(m1)
+
+m2 <- update(m1, . ~ . + Gini_Index.Estimate)
+summary(m2)
+
+m3 <- update(m2, . ~ . + Tweets.PA:Gini_Index.Estimate)
+summary(m3)
+
+m4 <- betareg(Inactivity.Ageadjusted ~ Tweets.PA.Log, data = cleaned_data)
+summary(m4)
+
+m5 <- update(m4, . ~ . + Gini_Index.Estimate)
+summary(m5)
+
+m6 <- update(m5, . ~ . + Tweets.PA:Gini_Index.Estimate)
+summary(m6)
+
+display(AIC(m1, m2, m3, m4, m5, m6))
 ```
 
 ```{r}
@@ -130,11 +156,14 @@ display(as.data.frame(results$P))
 
 ```{r fig.width=20, fig.height=15}
 par(mfrow=c(2, 1))
-scatter.smooth(cleaned_data$Tweets.PA, cleaned_data$PA.Percent.Inactive)
-scatter.smooth(cleaned_data$Tweets.PA.Log, cleaned_data$PA.Percent.Inactive)
+scatter.smooth(cleaned_data$Tweets.PA, cleaned_data$Inactivity.Percent)
+scatter.smooth(cleaned_data$Tweets.PA.Log, cleaned_data$Inactivity.Percent)
 ```
 
 ```{r}
 predict(m4, data.frame(Tweets.PA.Log = log(23)))
 ```
-
+```{r}
+library(maps)
+map('county')
+```
