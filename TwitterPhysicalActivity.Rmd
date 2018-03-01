@@ -12,6 +12,7 @@ library(fitdistrplus)
 library(logspline)
 library(Hmisc)
 library(knitr)
+library(dplyr)
 ```
 
 The compiled dataset contains a subset of US counties (names and FIPS codes).
@@ -33,7 +34,7 @@ display <- function(x) {
   else kable(x)
 }
 
-all_data <- read.csv("all_data.csv")
+all_data <- read.csv("data/all_data.csv")
 display(head(all_data))
 ```
 
@@ -42,17 +43,24 @@ We must also normalize the percentages (expressed here as a number /100) to valu
 
 ```{r}
 # Remove rows with missing values
+cat('Rows in complete dataset: ', nrow(all_data), '\n')
 cleaned_data <- na.omit(all_data)
-cleaned_data$Tweets.PA.Log <- log1p(cleaned_data$Tweets.PA)
+cleaned_data <- cleaned_data[cleaned_data$Tweets.All >= cleaned_data$Tweets.PA,]
+cat('Rows after cleaning: ', nrow(cleaned_data))
+
+#cleaned_data$Tweets.PA.Log <- log1p(cleaned_data$Tweets.PA)
 cleaned_data$Tweets.PA.Percent <- cleaned_data$Tweets.PA / cleaned_data$Tweets.All
 cleaned_data$Inactivity.Percent <- cleaned_data$Inactivity.Percent / 100
 cleaned_data$Inactivity.Ageadjusted <- cleaned_data$Inactivity.Ageadjusted / 100
+
+display(head(arrange(cleaned_data, desc(Tweets.All))))
+display(head(arrange(cleaned_data, desc(Tweets.PA))))
 
 vars <- c(
   "Gini_Index.Estimate",
   "Tweets.PA",
   "Tweets.PA.Percent",
-  "Tweets.PA.Log",
+#  "Tweets.PA.Log",
   "Tweets.All",
   "Inactivity.Cases",
   "Inactivity.Percent",
@@ -114,56 +122,61 @@ summary(m2)
 m3 <- update(m2, . ~ . + Tweets.PA:Gini_Index.Estimate)
 summary(m3)
 
-m4 <- betareg(Inactivity.Percent ~ Tweets.PA.Log, data = cleaned_data)
-summary(m4)
-
-m5 <- update(m4, . ~ . + Gini_Index.Estimate)
-summary(m5)
-
-m6 <- update(m5, . ~ . + Tweets.PA:Gini_Index.Estimate)
-summary(m6)
-
-display(AIC(m1, m2, m3, m4, m5, m6))
+display(merge(AIC(m1, m2, m3), BIC(m1, m2, m3)))
 ```
 ```{r}
-m1 <- betareg(Inactivity.Ageadjusted ~ Tweets.PA, data = cleaned_data)
-summary(m1)
+m1.aa <- betareg(Inactivity.Ageadjusted ~ Tweets.PA, data = cleaned_data)
+summary(m1.aa)
 
-m2 <- update(m1, . ~ . + Gini_Index.Estimate)
-summary(m2)
+m2.aa <- update(m1, . ~ . + Gini_Index.Estimate)
+summary(m2.aa)
 
-m3 <- update(m2, . ~ . + Tweets.PA:Gini_Index.Estimate)
-summary(m3)
+m3.aa <- update(m2, . ~ . + Tweets.PA:Gini_Index.Estimate)
+summary(m3.aa)
 
-m4 <- betareg(Inactivity.Ageadjusted ~ Tweets.PA.Log, data = cleaned_data)
-summary(m4)
-
-m5 <- update(m4, . ~ . + Gini_Index.Estimate)
-summary(m5)
-
-m6 <- update(m5, . ~ . + Tweets.PA:Gini_Index.Estimate)
-summary(m6)
-
-display(AIC(m1, m2, m3, m4, m5, m6))
-```
-
-```{r}
-trunc_data <- cleaned_data[cleaned_data$Tweets.All > median(cleaned_data$Tweets.All),]
-results <- rcorr(as.matrix(trunc_data[vars]), type = "pearson")
-display(as.data.frame(results$r))
-display(as.data.frame(results$P))
+display(merge(AIC(m1.aa, m2.aa, m3.aa), BIC(m1.aa, m2.aa, m3.aa)))
 ```
 
 ```{r fig.width=20, fig.height=15}
 par(mfrow=c(2, 1))
 scatter.smooth(cleaned_data$Tweets.PA, cleaned_data$Inactivity.Percent)
-scatter.smooth(cleaned_data$Tweets.PA.Log, cleaned_data$Inactivity.Percent)
+scatter.smooth(log1p(cleaned_data$Tweets.PA), cleaned_data$Inactivity.Percent)
 ```
 
 ```{r}
-predict(m4, data.frame(Tweets.PA.Log = log(23)))
+predict(m3, cleaned_data[cleaned_data$Geography == 'Madison County, New York',])
 ```
 ```{r}
-library(maps)
-map('county')
+#map_data <- cleaned_data[c('FIPS', 'Inactivity.Percent')]
+#names(map_data) <- c('region', 'value')
+
+#library(choroplethr)
+#map_data$value <- cleaned_data$Tweets.PA / cleaned_data$Tweets.All * 100
+#county_choropleth(map_data)
+
+#map_data$value <- cleaned_data$Tweets.PA
+#county_choropleth(map_data)
+
+#map_data$value <- cleaned_data$Gini_Index.Estimate
+#county_choropleth(map_data)
+
+#map_data$value <- cleaned_data$Inactivity.Percent * 100
+#county_choropleth(map_data, title = '\tPercentage of Physical Inactivity')
+
+#map_data$value <- predict(m1, cleaned_data) * 100
+#county_choropleth(map_data, title = '\tModel 1 Predictions')
+#map_data$value <- predict(m2, cleaned_data) * 100
+#county_choropleth(map_data, title = '\tModel 2 Predictions')
+#map_data$value <- predict(m3, cleaned_data) * 100
+#county_choropleth(map_data, title = '\tModel 3 Predictions')
+
+#map_data$value <- cleaned_data$Inactivity.Ageadjusted * 100
+#county_choropleth(map_data, title = '\tPercentage of Physical Inactivity (Age-adjusted)')
+
+#map_data$value <- predict(m1.aa, cleaned_data) * 100
+#county_choropleth(map_data, title = '\tModel 1 Predictions')
+#map_data$value <- predict(m2.aa, cleaned_data) * 100
+#county_choropleth(map_data, title = '\tModel 2 Predictions')
+#map_data$value <- predict(m3.aa, cleaned_data) * 100
+#county_choropleth(map_data, title = '\tModel 3 Predictions')
 ```
