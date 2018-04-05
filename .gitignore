@@ -1,6 +1,9 @@
 .Rproj.user
 .Rhistory
-.RData
+.RData*
 .Ruserdata
+.Rprofile
+.idea/
+.ipynb_checkpoints/
 packrat/lib*/
 packrat/src/
