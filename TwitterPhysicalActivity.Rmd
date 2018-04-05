@@ -1,8 +1,8 @@
 ---
 title: "Twitter and Physical Activity"
 output:
-  html_notebook: default
   github_document: default
+  html_notebook: default
 ---
 ```{r message=FALSE}
 library(foreign)
@@ -64,7 +64,9 @@ vars <- c(
   "Tweets.All",
   "Inactivity.Cases",
   "Inactivity.Percent",
-  "Inactivity.Ageadjusted"
+  "Inactivity.Ageadjusted",
+  "POPESTIMATE2013",
+  "Education.College.Percent"
 )
 display(as.data.frame(do.call(cbind, lapply(cleaned_data[vars], summary))))
 ```
@@ -119,22 +121,28 @@ summary(m1)
 m2 <- update(m1, . ~ . + Gini_Index.Estimate)
 summary(m2)
 
-m3 <- update(m2, . ~ . + Tweets.PA:Gini_Index.Estimate)
+m3 <- update(m2, . ~ . + POPESTIMATE2013)
 summary(m3)
 
-display(merge(AIC(m1, m2, m3), BIC(m1, m2, m3)))
+m4 <- update(m3, . ~ . + Education.College.Percent)
+summary(m4)
+
+display(merge(AIC(m1, m2, m3, m4), BIC(m1, m2, m3, m4)))
 ```
 ```{r}
 m1.aa <- betareg(Inactivity.Ageadjusted ~ Tweets.PA, data = cleaned_data)
 summary(m1.aa)
 
-m2.aa <- update(m1, . ~ . + Gini_Index.Estimate)
+m2.aa <- update(m1.aa, . ~ . + Gini_Index.Estimate)
 summary(m2.aa)
 
-m3.aa <- update(m2, . ~ . + Tweets.PA:Gini_Index.Estimate)
+m3.aa <- update(m2.aa, . ~ . + POPESTIMATE2013)
 summary(m3.aa)
 
-display(merge(AIC(m1.aa, m2.aa, m3.aa), BIC(m1.aa, m2.aa, m3.aa)))
+m4.aa <- update(m3.aa, . ~ . + Education.College.Percent)
+summary(m4.aa)
+
+display(merge(AIC(m1.aa, m2.aa, m3.aa, m4.aa), BIC(m1.aa, m2.aa, m3.aa, m4.aa)))
 ```
 
 ```{r fig.width=20, fig.height=15}
