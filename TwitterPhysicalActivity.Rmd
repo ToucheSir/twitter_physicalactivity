@@ -5,14 +5,12 @@ output:
   html_notebook: default
 ---
 ```{r message=FALSE}
-library(foreign)
+library(tidyverse)
 library(betareg)
-library(ggplot2)
 library(fitdistrplus)
-library(logspline)
 library(Hmisc)
 library(knitr)
-library(dplyr)
+library(lmtest)
 ```
 
 The compiled dataset contains a subset of US counties (names and FIPS codes).
@@ -35,20 +33,22 @@ display <- function(x) {
 }
 
 all_data <- read.csv("data/all_data.csv")
+cat('Rows in complete dataset: ', nrow(all_data))
 display(head(all_data))
 ```
 
 Not all counties in the dataset have tweet or physical activity data available, so we must filter those out.
-We must also normalize the percentages (expressed here as a number /100) to values we can use for a beta distribution (i.e. 0-1)
 
 ```{r}
 # Remove rows with missing values
-cat('Rows in complete dataset: ', nrow(all_data), '\n')
 cleaned_data <- na.omit(all_data)
 cleaned_data <- cleaned_data[cleaned_data$Tweets.All >= cleaned_data$Tweets.PA,]
+display(all_data[rowSums(is.na(all_data)) > 0,])
 cat('Rows after cleaning: ', nrow(cleaned_data))
+```
 
-#cleaned_data$Tweets.PA.Log <- log1p(cleaned_data$Tweets.PA)
+We must also normalize the percentages (expressed here as a number /100) to values we can use for a beta distribution (i.e. 0-1)
+```{r}
 cleaned_data$Tweets.PA.Percent <- cleaned_data$Tweets.PA / cleaned_data$Tweets.All
 cleaned_data$Inactivity.Percent <- cleaned_data$Inactivity.Percent / 100
 cleaned_data$Inactivity.Ageadjusted <- cleaned_data$Inactivity.Ageadjusted / 100
@@ -56,25 +56,14 @@ cleaned_data$Inactivity.Ageadjusted <- cleaned_data$Inactivity.Ageadjusted / 100
 display(head(arrange(cleaned_data, desc(Tweets.All))))
 display(head(arrange(cleaned_data, desc(Tweets.PA))))
 
-vars <- c(
-  "Gini_Index.Estimate",
-  "Tweets.PA",
-  "Tweets.PA.Percent",
-#  "Tweets.PA.Log",
-  "Tweets.All",
-  "Inactivity.Cases",
-  "Inactivity.Percent",
-  "Inactivity.Ageadjusted",
-  "POPESTIMATE2013",
-  "Education.College.Percent"
-)
+vars <- setdiff(names(cleaned_data), c("FIPS", "State", "County"))
 display(as.data.frame(do.call(cbind, lapply(cleaned_data[vars], summary))))
 ```
 
 The count data are heavily right-skewed with notable outliers. This is partly attributable to the disparity in population between counties
 (e.g. LA, the most populous county, has a similar relative magnitude of tweets)
 
-```{r fig.width=20, fig.height=10}
+```{r fig.width=20, fig.height=15}
 par(mfrow=c(ceiling(length(vars) / 2), 2))
 for (v in vars) {
   boxplot(cleaned_data[v], main = v, horizontal = TRUE)
@@ -121,14 +110,27 @@ summary(m1)
 m2 <- update(m1, . ~ . + Gini_Index.Estimate)
 summary(m2)
 
-m3 <- update(m2, . ~ . + POPESTIMATE2013)
+m3 <- update(m2, . ~ . + Education.College.Estimate)
 summary(m3)
 
-m4 <- update(m3, . ~ . + Education.College.Percent)
+m4 <- update(m3, . ~ . + Tweets.PA.Positive - Tweets.PA)
 summary(m4)
 
-display(merge(AIC(m1, m2, m3, m4), BIC(m1, m2, m3, m4)))
+m5 <- update(m3, . ~ . + Tweets.PA.Negative - Tweets.PA)
+summary(m5)
+
+m6 <- update(m3, . ~ . + Tweets.PA.Positive + Tweets.PA.Negative + Tweets.PA.Neutral - Tweets.PA)
+summary(m6)
+
+compareModels <- function(...) {
+  res = AIC(...)
+  rownames(res) <- paste('m', 1:nrow(res), sep = '')
+  res$BIC <- BIC(...)$BIC
+  display(res)
+}
+compareModels(m1, m2, m3, m4, m5, m6)
 ```
+
 ```{r}
 m1.aa <- betareg(Inactivity.Ageadjusted ~ Tweets.PA, data = cleaned_data)
 summary(m1.aa)
@@ -136,13 +138,19 @@ summary(m1.aa)
 m2.aa <- update(m1.aa, . ~ . + Gini_Index.Estimate)
 summary(m2.aa)
 
-m3.aa <- update(m2.aa, . ~ . + POPESTIMATE2013)
+m3.aa <- update(m2.aa, . ~ . + Education.College.Estimate)
 summary(m3.aa)
 
-m4.aa <- update(m3.aa, . ~ . + Education.College.Percent)
+m4.aa <- update(m3.aa, . ~ . + Tweets.PA.Positive - Tweets.PA)
 summary(m4.aa)
 
-display(merge(AIC(m1.aa, m2.aa, m3.aa, m4.aa), BIC(m1.aa, m2.aa, m3.aa, m4.aa)))
+m5.aa <- update(m3.aa, . ~ . + Tweets.PA.Negative - Tweets.PA)
+summary(m5.aa)
+
+m6.aa <- update(m3.aa, . ~ . + Tweets.PA.Positive + Tweets.PA.Negative + Tweets.PA.Neutral - Tweets.PA)
+summary(m6.aa)
+
+compareModels(m1.aa, m2.aa, m3.aa, m4.aa, m5.aa, m6.aa)
 ```
 
 ```{r fig.width=20, fig.height=15}
@@ -151,40 +159,158 @@ scatter.smooth(cleaned_data$Tweets.PA, cleaned_data$Inactivity.Percent)
 scatter.smooth(log1p(cleaned_data$Tweets.PA), cleaned_data$Inactivity.Percent)
 ```
 
-```{r}
-predict(m3, cleaned_data[cleaned_data$Geography == 'Madison County, New York',])
+```{r fig.width=20, fig.height=10}
+m.test <- m3
+lrtest(m.test)
+# gleverage(m4.aa)
+m.test.rmse <- sqrt(mean(m.test$residuals^2))
+print(m.test.rmse)
+plot(m.test)
 ```
 ```{r}
-#map_data <- cleaned_data[c('FIPS', 'Inactivity.Percent')]
-#names(map_data) <- c('region', 'value')
+library(classInt)
+intervals <- classIntervals(cleaned_data$Inactivity.Ageadjusted, n = 5, style = 'jenks')
+```
 
-#library(choroplethr)
-#map_data$value <- cleaned_data$Tweets.PA / cleaned_data$Tweets.All * 100
-#county_choropleth(map_data)
 
-#map_data$value <- cleaned_data$Tweets.PA
-#county_choropleth(map_data)
+```{r fig1, fig.width=12, fig.height=7}
+library(scales)
+library(usmap)
+library(viridis)
 
-#map_data$value <- cleaned_data$Gini_Index.Estimate
-#county_choropleth(map_data)
+cleaned_data$quants <-  cut(cleaned_data$Inactivity.Ageadjusted, intervals$brks, include.lowest = T)
 
-#map_data$value <- cleaned_data$Inactivity.Percent * 100
-#county_choropleth(map_data, title = '\tPercentage of Physical Inactivity')
+cleaned_data$predicted <- predict(m3, type = 'response')
+cleaned_data$pred_quants <-  cut(cleaned_data$predicted, intervals$brks, include.lowest = T)
 
-#map_data$value <- predict(m1, cleaned_data) * 100
-#county_choropleth(map_data, title = '\tModel 1 Predictions')
-#map_data$value <- predict(m2, cleaned_data) * 100
-#county_choropleth(map_data, title = '\tModel 2 Predictions')
-#map_data$value <- predict(m3, cleaned_data) * 100
-#county_choropleth(map_data, title = '\tModel 3 Predictions')
+counties_map <- us_map(regions = 'counties')
+counties_map$fips <- as.numeric(counties_map$fips)
+plot_data <- inner_join(counties_map, cleaned_data, by = c('fips'= 'FIPS'))
 
-#map_data$value <- cleaned_data$Inactivity.Ageadjusted * 100
-#county_choropleth(map_data, title = '\tPercentage of Physical Inactivity (Age-adjusted)')
+states <- us_map(region = 'states')
 
-#map_data$value <- predict(m1.aa, cleaned_data) * 100
-#county_choropleth(map_data, title = '\tModel 1 Predictions')
-#map_data$value <- predict(m2.aa, cleaned_data) * 100
-#county_choropleth(map_data, title = '\tModel 2 Predictions')
-#map_data$value <- predict(m3.aa, cleaned_data) * 100
-#county_choropleth(map_data, title = '\tModel 3 Predictions')
+scale_dir <- 1
+ggplot(plot_data, aes(long, lat, group = group)) + 
+  geom_polygon(aes(fill = Inactivity.Ageadjusted), colour = alpha('white', 1 / 2), size = 0.2) +
+  geom_polygon(data = states, colour = 'white', fill = NA) +
+  coord_equal() +
+  theme_minimal() +
+  theme(axis.line = element_blank(), axis.text = element_blank(),
+        axis.ticks = element_blank(), axis.title = element_blank(),
+        legend.position = 'bottom') +
+  scale_fill_distiller(
+    #option = 'magma',
+    direction = scale_dir,
+    labels = percent,
+                     guide = guide_colourbar(
+                       direction = 'horizontal',
+                       title = 'Age-adjusted physical inactivity level',
+                       title.position = 'top',
+                       title.hjust = .5,
+                       barheight = unit(3, units = 'mm'),
+                       barwidth = unit(100, units = 'mm')
+                     ))
+
+ggplot(plot_data, aes(long, lat, group = group)) + 
+  geom_polygon(aes(fill = Tweets.PA.Percent), colour = alpha('white', 1 / 2), size = 0.2) +
+  geom_polygon(data = states, colour = 'white', fill = NA) +
+  coord_equal() +
+  theme_minimal() +
+  theme(axis.line = element_blank(), axis.text = element_blank(),
+        axis.ticks = element_blank(), axis.title = element_blank(),
+        legend.position = 'bottom') +
+  scale_fill_distiller(
+    #option = 'magma',
+    direction = -scale_dir,
+    labels = percent,
+    trans = 'sqrt',
+                     guide = guide_colourbar(
+                       direction = 'horizontal',
+                       title = 'Percentage of physical activity related tweets',
+                       title.position = 'top',
+                       title.hjust = .5,
+                       barheight = unit(3, units = 'mm'),
+                       barwidth = unit(100, units = 'mm')
+                     ))
+
+
+ggplot(plot_data, aes(long, lat, group = group)) + 
+  geom_polygon(aes(fill = Gini_Index.Estimate), colour = alpha('white', 1 / 2), size = 0.2) +
+  geom_polygon(data = states, colour = 'white', fill = NA) +
+  coord_equal() +
+  theme_minimal() +
+  theme(axis.line = element_blank(), axis.text = element_blank(),
+        axis.ticks = element_blank(), axis.title = element_blank(),
+        legend.position = 'bottom') +
+  scale_fill_distiller(
+      #option = 'magma',
+    direction = scale_dir,
+      guide = guide_colourbar(
+        direction = 'horizontal',
+        title = 'Gini Index of income inequality',
+        title.position = 'top',
+        title.hjust = .5,
+        barheight = unit(3, units = 'mm'),
+        barwidth = unit(100, units = 'mm')
+      ))
+
+ggplot(plot_data, aes(long, lat, group = group)) + 
+  geom_polygon(aes(fill = Education.College.Estimate / 100), colour = alpha('white', 1 / 2), size = 0.2) +
+  geom_polygon(data = states, colour = 'white', fill = NA) +
+  coord_equal() +
+  theme_minimal() +
+  theme(axis.line = element_blank(), axis.text = element_blank(),
+        axis.ticks = element_blank(), axis.title = element_blank(),
+        legend.position = 'bottom') +
+  scale_fill_distiller(
+    #option = 'magma',
+    labels = percent,
+    direction = scale_dir,
+                     guide = guide_colourbar(
+                       direction = 'horizontal',
+                       title = 'Percentage of college educated population',
+                       title.position = 'top',
+                       title.hjust = .5,
+                       barheight = unit(3, units = 'mm'),
+                       barwidth = unit(100, units = 'mm')
+                     ))
+
+ggplot(plot_data, aes(long, lat, group = group)) + 
+  geom_polygon(aes(fill = quants), colour = alpha('white', 1 / 2), size = 0.2) +
+  geom_polygon(data = states, colour = 'white', fill = NA) +
+  coord_equal() +
+  theme_minimal() +
+  theme(axis.line = element_blank(), axis.text = element_blank(),
+        axis.ticks = element_blank(), axis.title = element_blank(),
+        #legend.position = 'bottom',
+        plot.background = element_rect(fill = "#f5f5f2", color = NA), 
+        panel.background = element_rect(fill = "#f5f5f2", color = NA), 
+        legend.background = element_rect(fill = "#f5f5f2", color = NA),
+        panel.border = element_blank()
+        ) +
+  scale_fill_viridis(
+    option = 'magma',
+    name = 'Age-adjusted physical inactivity',
+    discrete = T,
+    alpha = .80
+  )
+ggplot(plot_data, aes(long, lat, group = group)) + 
+  geom_polygon(aes(fill = pred_quants), colour = alpha('white', 1 / 2), size = 0.2) +
+  geom_polygon(data = states, colour = 'white', fill = NA) +
+  coord_equal() +
+  theme_minimal() +
+  theme(axis.line = element_blank(), axis.text = element_blank(),
+        axis.ticks = element_blank(), axis.title = element_blank(),
+        #legend.position = 'bottom',
+        plot.background = element_rect(fill = "#f5f5f2", color = NA), 
+        panel.background = element_rect(fill = "#f5f5f2", color = NA), 
+        legend.background = element_rect(fill = "#f5f5f2", color = NA),
+        panel.border = element_blank()
+        ) +
+  scale_fill_viridis(
+    option = 'magma',
+    name = 'Age-adjusted physical inactivity',
+    discrete = T,
+    alpha = .80
+  )
 ```

@@ -2,7 +2,6 @@
 .Rhistory
 .RData*
 .Ruserdata
-.Rprofile
 .idea/
 .ipynb_checkpoints/
 packrat/lib*/
